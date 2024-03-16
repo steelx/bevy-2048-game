@@ -7,7 +7,25 @@ const TILE_GAP: f32 = 10.;
 
 #[derive(Component, Copy, Clone)]
 struct Board {
-  pub size: u8
+  pub size: u8,
+  pub size_in_pixels: f32
+}
+
+impl Board {
+  pub fn new(size: u8) -> Self {
+    let size_in_pixels = 
+      f32::from(size) * TILE_SIZE + f32::from(size+1) * TILE_GAP;
+    Self {
+      size, size_in_pixels
+    }
+  }
+  
+  pub fn tile_to_pixels(&self, tile: u8) -> f32 {
+    let bottom_left = -self.size_in_pixels / 2. + (TILE_SIZE*0.5);
+    bottom_left
+      + f32::from(tile)*TILE_SIZE
+      + f32::from(tile+1)*TILE_GAP
+  }
 }
 
 pub struct BoardPlugin;
@@ -20,19 +38,14 @@ impl Plugin for BoardPlugin {
 }
 
 fn setup_board(mut commands: Commands) {
-  let board = Board {
-    size: 4
-  };
-
-  let physical_board_size =
-    f32::from(board.size) * TILE_SIZE + f32::from(board.size+1) * TILE_GAP;
+  let board = Board::new(4);
 
   commands.spawn((
     SpriteBundle {
       sprite: Sprite {
         color: colours::BOARD,
         custom_size: Some(vec2(
-          physical_board_size, physical_board_size
+          board.size_in_pixels, board.size_in_pixels
         )),
         ..default()
       },
@@ -40,12 +53,10 @@ fn setup_board(mut commands: Commands) {
     },
     board
   )).with_children(|builder| {
-    let bottom_left = -physical_board_size / 2. + (TILE_SIZE*0.5);
-
     for y in 0..board.size {
       for x in 0..board.size {
-        let tile_x = bottom_left + f32::from(x)*TILE_SIZE + f32::from(x+1)*TILE_GAP;
-        let tile_y = bottom_left + f32::from(y)*TILE_SIZE + f32::from(y+1)*TILE_GAP;
+        let tile_x = board.tile_to_pixels(x);
+        let tile_y = board.tile_to_pixels(y);
         builder.spawn(
           SpriteBundle {
             sprite: Sprite {
