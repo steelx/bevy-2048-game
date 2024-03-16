@@ -1,5 +1,6 @@
 mod camera;
 mod board;
+mod colours;
 
 use bevy::prelude::*;
 use bevy::window::{close_on_esc, WindowResolution};
