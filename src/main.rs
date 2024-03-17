@@ -1,6 +1,7 @@
 mod camera;
 mod board;
 mod colours;
+mod tiles;
 
 use bevy::prelude::*;
 use bevy::window::{close_on_esc, WindowResolution};
@@ -17,6 +18,7 @@ fn main() {
     }))
     .add_plugins(camera::CameraPlugin)
     .add_plugins(board::BoardPlugin)
+    .add_plugins(tiles::TilesPlugin)
     .add_systems(Update, close_on_esc)
     .run();
 }

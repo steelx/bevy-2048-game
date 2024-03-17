@@ -10,3 +10,7 @@ pub const BOARD: Color = Color::Lcha {
 pub const TILE_PLACEHOLDER: Color = Color::Lcha {
   lightness: 0.5, chroma: 0.4, hue: 0.8, alpha: 0.7,
 };
+
+pub const TILE: Color = Color::Lcha {
+  lightness: 0.85, chroma: 0.4, hue: 0.8, alpha: 1.0,
+};

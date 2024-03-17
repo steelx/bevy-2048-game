@@ -2,11 +2,11 @@ use bevy::math::vec2;
 use bevy::prelude::*;
 use crate::colours;
 
-const TILE_SIZE: f32 = 40.;
-const TILE_GAP: f32 = 10.;
+pub const TILE_SIZE: f32 = 40.;
+pub const TILE_GAP: f32 = 10.;
 
 #[derive(Component, Copy, Clone)]
-struct Board {
+pub struct Board {
   pub size: u8,
   pub size_in_pixels: f32
 }
