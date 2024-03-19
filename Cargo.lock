@@ -287,7 +287,9 @@ name = "b2048-game"
 version = "0.1.0"
 dependencies = [
  "bevy",
+ "itertools",
  "rand",
+ "serde",
 ]
 
 [[package]]

@@ -1,15 +1,23 @@
 use bevy::math::vec2;
 use bevy::prelude::*;
 use rand::seq::IteratorRandom;
+
 use crate::board::{Board, TILE_SIZE};
 use crate::colours;
 
 #[derive(Component)]
 pub struct TileText;
-#[derive(Component)]
+#[derive(Component, Debug)]
 pub struct Tile {
   pub points: u32
 }
+
+#[derive(Component, Debug)]
+pub struct TilePosition {
+  pub y: u32,
+  pub x: u32,
+}
+
 
 pub struct TilesPlugin;
 
@@ -34,11 +42,13 @@ fn spawn_tiles(mut commands: Commands, board_query: Query<&Board>) {
   let random_indices = all_indices.choose_multiple(&mut rng, 2);
   
   for (x, y) in random_indices {
+    let tile_position = TilePosition { x: u32::from(x), y: u32::from(y) };
     let tile_x = board.tile_to_pixels(x);
     let tile_y = board.tile_to_pixels(y);
     commands
       .spawn((
         Tile { points: 2 },
+        tile_position,
         SpriteBundle {
           sprite: Sprite {
             color: colours::TILE,
@@ -54,7 +64,7 @@ fn spawn_tiles(mut commands: Commands, board_query: Query<&Board>) {
           .spawn((
             TileText,
             Text2dBundle {
-              text: Text::from_section("-", TextStyle {
+              text: Text::from_section("0", TextStyle {
                 font_size: 32., color: Color::MIDNIGHT_BLUE, ..default()
               }),
               transform: Transform::from_xyz(0., 0., 1.),

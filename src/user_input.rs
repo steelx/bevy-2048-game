@@ -1,4 +1,7 @@
+use std::cmp::Ordering;
+use itertools::Itertools;
 use bevy::prelude::*;
+use crate::tiles::{Tile, TilePosition};
 
 pub struct UserInputPlugin;
 
@@ -9,13 +12,35 @@ impl Plugin for UserInputPlugin {
   }
 }
 
-fn update_user_input(keyboard_input: Res<ButtonInput<KeyCode>>) {
+fn update_user_input(
+  keyboard_input: Res<ButtonInput<KeyCode>>,
+  mut tiles: Query<(Entity, &mut TilePosition, &mut Tile)>
+) {
   let user_input = keyboard_input.get_just_pressed().find_map(|value| {
     UserInput::try_from(value).ok()
   });
   
-  if let Some(key) = user_input {
-    println!("{:?}", key);
+  match user_input {
+    Some(UserInput::Left) => {
+      dbg!("left");
+      let mut it = tiles.iter_mut().sorted_by(|a, b| {
+        match Ord::cmp(&a.1.y, &b.1.y) {
+          Ordering::Equal => Ord::cmp(&a.1.x, &b.1.x), // if Equal means 2 tiles are in a row
+          ordering => ordering
+        }
+      });
+      dbg!(it.collect::<Vec<_>>());
+    }
+    Some(UserInput::Right) => {
+      dbg!("right");
+    }
+    Some(UserInput::Up) => {
+      dbg!("up");
+    }
+    Some(UserInput::Down) => {
+      dbg!("down");
+    }
+    None => ()
   }
 }
 
