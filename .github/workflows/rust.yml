@@ -16,7 +16,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v3
-    - run: sudo apt-get install -yqq build-essential
+    - run: sudo apt-get install -yqq build-essential alsa
     - name: Build
       run: cargo build --release
           
