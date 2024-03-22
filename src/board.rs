@@ -7,24 +7,24 @@ pub const TILE_GAP: f32 = 10.;
 
 #[derive(Component, Copy, Clone)]
 pub struct Board {
-  pub size: u8,
+  pub size: u32,
   pub size_in_pixels: f32
 }
 
 impl Board {
-  pub fn new(size: u8) -> Self {
-    let size_in_pixels = 
-      f32::from(size) * TILE_SIZE + f32::from(size+1) * TILE_GAP;
+  pub fn new(size: u32) -> Self {
+    let size_in_pixels =
+      (size as f32) * TILE_SIZE + (size+1) as f32 * TILE_GAP;
     Self {
       size, size_in_pixels
     }
   }
   
-  pub fn tile_to_pixels(&self, tile: u8) -> f32 {
+  pub fn tile_to_pixels(&self, tile: u32) -> f32 {
     let bottom_left = -self.size_in_pixels / 2. + (TILE_SIZE*0.5);
     bottom_left
-      + f32::from(tile)*TILE_SIZE
-      + f32::from(tile+1)*TILE_GAP
+      + (tile as f32)*TILE_SIZE
+      + (tile+1) as f32 *TILE_GAP
   }
 }
 

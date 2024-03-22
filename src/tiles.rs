@@ -25,7 +25,7 @@ impl Plugin for TilesPlugin {
   fn build(&self, app: &mut App) {
     app
       .add_systems(PostStartup, spawn_tiles)
-      .add_systems(Update, render_tile_points);
+      .add_systems(Update, (render_tile_points, render_tiles_position));
   }
 }
 
@@ -85,5 +85,16 @@ fn render_tile_points(
       let text_section = text.sections.first_mut().expect("Text section");
       text_section.value = tile.points.to_string();
     }
+  }
+}
+
+fn render_tiles_position(
+  mut tiles: Query<(&mut Transform, &TilePosition), Changed<TilePosition>>,
+  board_query: Query<&Board>,
+) {
+  let board = board_query.single();
+  for (mut transform, pos) in tiles.iter_mut() {
+    transform.translation.x = board.tile_to_pixels(pos.x);
+    transform.translation.y = board.tile_to_pixels(pos.y);
   }
 }
