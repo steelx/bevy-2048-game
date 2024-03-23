@@ -1,7 +1,7 @@
 use std::cmp::Ordering;
 use itertools::Itertools;
 use bevy::prelude::*;
-use crate::board::Board;
+use crate::board::{Board, Game};
 use crate::tiles::{NewTileEvent, Tile, TilePosition};
 
 pub struct UserInputPlugin;
@@ -18,7 +18,8 @@ fn update_user_input(
   keyboard_input: Res<ButtonInput<KeyCode>>,
   mut tiles: Query<(Entity, &mut TilePosition, &mut Tile)>,
   board_query: Query<&Board>,
-  mut new_tile_event_writer: EventWriter<NewTileEvent>
+  mut new_tile_event_writer: EventWriter<NewTileEvent>,
+  mut game: ResMut<Game>
 ) {
   let board = board_query.single();
   let user_input = keyboard_input.get_just_pressed().find_map(|value| {
@@ -50,6 +51,7 @@ fn update_user_input(
           else {
             let real_next_tile = it.next().expect("Tile should have been there!");
             tile.2.points += real_next_tile.2.points;
+            game.score += tile.2.points;
             commands.entity(real_next_tile.0).despawn_recursive();
 
             if let Some(next_next_tile) = it.peek() {
@@ -62,6 +64,7 @@ fn update_user_input(
           }
         }
       }
+      dbg!(game.score);
       new_tile_event_writer.send(NewTileEvent);
     }
 }

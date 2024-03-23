@@ -28,11 +28,17 @@ impl Board {
   }
 }
 
+#[derive(Default, Resource)]
+pub struct Game {
+  pub score: u32
+}
+
 pub struct BoardPlugin;
 
 impl Plugin for BoardPlugin {
   fn build(&self, app: &mut App) {
     app
+      .init_resource::<Game>()
       .add_systems(Startup, setup_board);
   }
 }
