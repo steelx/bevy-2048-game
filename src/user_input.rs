@@ -2,7 +2,7 @@ use std::cmp::Ordering;
 use itertools::Itertools;
 use bevy::prelude::*;
 use crate::board::Board;
-use crate::tiles::{Tile, TilePosition};
+use crate::tiles::{NewTileEvent, Tile, TilePosition};
 
 pub struct UserInputPlugin;
 
@@ -17,7 +17,8 @@ fn update_user_input(
   mut commands: Commands,
   keyboard_input: Res<ButtonInput<KeyCode>>,
   mut tiles: Query<(Entity, &mut TilePosition, &mut Tile)>,
-  board_query: Query<&Board>
+  board_query: Query<&Board>,
+  mut new_tile_event_writer: EventWriter<NewTileEvent>
 ) {
   let board = board_query.single();
   let user_input = keyboard_input.get_just_pressed().find_map(|value| {
@@ -61,6 +62,7 @@ fn update_user_input(
           }
         }
       }
+      new_tile_event_writer.send(NewTileEvent);
     }
 }
 

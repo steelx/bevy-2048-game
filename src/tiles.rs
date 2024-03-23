@@ -1,3 +1,4 @@
+use std::cmp::PartialEq;
 use bevy::math::vec2;
 use bevy::prelude::*;
 use rand::seq::IteratorRandom;
@@ -12,20 +13,23 @@ pub struct Tile {
   pub points: u32
 }
 
-#[derive(Component, Debug)]
+#[derive(Component, Debug, PartialEq, Copy, Clone)]
 pub struct TilePosition {
   pub y: u32,
   pub x: u32,
 }
 
+#[derive(Event)]
+pub struct NewTileEvent;
 
 pub struct TilesPlugin;
 
 impl Plugin for TilesPlugin {
   fn build(&self, app: &mut App) {
     app
+      .add_event::<NewTileEvent>()
       .add_systems(PostStartup, spawn_tiles)
-      .add_systems(Update, (render_tile_points, render_tiles_position));
+      .add_systems(Update, (render_tile_points, render_tiles_position, new_tile_event_handler));
   }
 }
 
@@ -33,7 +37,7 @@ fn spawn_tiles(mut commands: Commands, board_query: Query<&Board>) {
   let board = board_query.single();
   
   let mut rng = rand::thread_rng();
-  // Get all possible tile indices as an iterator
+  // Get all possible tile indices (cartesian product [x,y]) as an iterator
   let all_indices = (0..board.size)
     .flat_map(|x| (0..board.size)
       .map(move |y| (x, y)));
@@ -43,36 +47,74 @@ fn spawn_tiles(mut commands: Commands, board_query: Query<&Board>) {
   
   for (x, y) in random_indices {
     let tile_position = TilePosition { x: u32::from(x), y: u32::from(y) };
-    let tile_x = board.tile_to_pixels(x);
-    let tile_y = board.tile_to_pixels(y);
-    commands
-      .spawn((
-        Tile { points: 2 },
-        tile_position,
-        SpriteBundle {
-          sprite: Sprite {
-            color: colours::TILE,
-            custom_size: Some(vec2(TILE_SIZE, TILE_SIZE)),
-            ..default()
-          },
-          transform: Transform::from_xyz(tile_x, tile_y, 1.),
+    spawn_tile_util(&mut commands, board, tile_position);
+  }
+}
+
+fn new_tile_event_handler(
+  mut commands: Commands,
+  mut new_tile_event_reader: EventReader<NewTileEvent>,
+  tiles: Query<&TilePosition>,
+  board_query: Query<&Board>,
+) {
+  let board = board_query.single();
+  for _event in new_tile_event_reader.read() {
+    let mut rng = rand::thread_rng();
+    // cartesian product [x,y]
+    let all_indices = (0..board.size)
+      .flat_map(|x| (0..board.size)
+        .map(move |y| (x, y)));
+
+    let possible_position = all_indices
+      .filter_map(|tile_pos| {
+        let new_pos = TilePosition { x: tile_pos.0, y: tile_pos.1 };
+        match tiles.iter().find(|&&pos| pos == new_pos) {
+          Some(_) => None,
+          None => Some(new_pos)
+        }
+      })
+      .choose(&mut rng);
+
+    if let Some(tile_position) = possible_position {
+      spawn_tile_util(&mut commands, board, tile_position);
+    }
+  }
+}
+
+fn spawn_tile_util(
+  commands: &mut Commands,
+  board: &Board,
+  tile_position: TilePosition
+) {
+  let tile_x = board.tile_to_pixels(tile_position.x);
+  let tile_y = board.tile_to_pixels(tile_position.y);
+  commands
+    .spawn((
+      Tile { points: 2 },
+      tile_position,
+      SpriteBundle {
+        sprite: Sprite {
+          color: colours::TILE,
+          custom_size: Some(vec2(TILE_SIZE, TILE_SIZE)),
           ..default()
         },
-      ))
-      .with_children(|builder| {
-        builder
-          .spawn((
-            TileText,
-            Text2dBundle {
-              text: Text::from_section("0", TextStyle {
-                font_size: 32., color: Color::MIDNIGHT_BLUE, ..default()
-              }),
-              transform: Transform::from_xyz(0., 0., 1.),
-              ..default()
-            }
-          ));
-      });
-    }
+        transform: Transform::from_xyz(tile_x, tile_y, 1.),
+        ..default()
+      },
+    ))
+    .with_children(|builder| {
+      builder
+        .spawn((
+          TileText,
+          Text2dBundle {
+            text: Text::from_section("0", TextStyle {
+              font_size: 32., color: Color::MIDNIGHT_BLUE, ..default()
+            }),
+            transform: Transform::from_xyz(0., 0., 1.),
+            ..default()
+          }
+        ));
+    });
 }
 
 fn render_tile_points(
