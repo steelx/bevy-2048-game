@@ -8,12 +8,12 @@ use crate::colours;
 
 #[derive(Component)]
 pub struct TileText;
-#[derive(Component, Debug)]
+#[derive(Component, Debug, PartialEq)]
 pub struct Tile {
   pub points: u32
 }
 
-#[derive(Component, Debug, PartialEq, Copy, Clone)]
+#[derive(Component, Debug, PartialEq, Eq, Copy, Clone, Hash)]
 pub struct TilePosition {
   pub y: u32,
   pub x: u32,

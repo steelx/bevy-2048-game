@@ -3,6 +3,7 @@ mod board;
 mod colours;
 mod tiles;
 mod user_input;
+mod end_game;
 
 use bevy::prelude::*;
 use bevy::window::{close_on_esc, WindowResolution};
@@ -22,6 +23,7 @@ fn main() {
     .add_plugins(board::BoardPlugin)
     .add_plugins(tiles::TilesPlugin)
     .add_plugins(user_input::UserInputPlugin)
+    .add_plugins(end_game::EndGamePlugin)
     .add_systems(Update, close_on_esc)
     .run();
 }
