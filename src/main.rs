@@ -4,6 +4,7 @@ mod colours;
 mod tiles;
 mod user_input;
 mod end_game;
+mod game_states;
 
 use bevy::prelude::*;
 use bevy::window::{close_on_esc, WindowResolution};
@@ -24,6 +25,7 @@ fn main() {
     .add_plugins(tiles::TilesPlugin)
     .add_plugins(user_input::UserInputPlugin)
     .add_plugins(end_game::EndGamePlugin)
-    .add_systems(Update, close_on_esc)
+    .add_plugins(game_states::GameStatesPlugin)
+    .add_systems(Update, close_on_esc.run_if(in_state(game_states::GameState::GameOver)))
     .run();
 }
