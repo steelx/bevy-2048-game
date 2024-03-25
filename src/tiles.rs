@@ -1,6 +1,8 @@
 use std::cmp::PartialEq;
+use std::time::Duration;
 use bevy::math::vec2;
 use bevy::prelude::*;
+use bevy_easings::*;
 use rand::seq::IteratorRandom;
 
 use crate::board::{Board, TILE_SIZE};
@@ -29,6 +31,7 @@ impl Plugin for TilesPlugin {
   fn build(&self, app: &mut App) {
     app
       .add_event::<NewTileEvent>()
+      .add_plugins(EasingsPlugin)
       .add_systems(PostStartup, spawn_tiles)
       .add_systems(Update, (render_tile_points, render_tiles_position, new_tile_event_handler).run_if(in_state(GameState::Playing)));
   }
@@ -132,12 +135,20 @@ fn render_tile_points(
 }
 
 fn render_tiles_position(
-  mut tiles: Query<(&mut Transform, &TilePosition), Changed<TilePosition>>,
+  mut commands: Commands,
+  mut tiles: Query<(Entity, &Transform, &TilePosition), Changed<TilePosition>>,
   board_query: Query<&Board>,
 ) {
   let board = board_query.single();
-  for (mut transform, pos) in tiles.iter_mut() {
-    transform.translation.x = board.tile_to_pixels(pos.x);
-    transform.translation.y = board.tile_to_pixels(pos.y);
+  for (entity, transform, pos) in tiles.iter_mut() {
+    let x = board.tile_to_pixels(pos.x);
+    let y = board.tile_to_pixels(pos.y);
+    commands.entity(entity).insert(transform.ease_to(
+      Transform::from_xyz(x, y, transform.translation.z),
+      EaseFunction::QuadraticInOut,
+      EasingType::Once {
+        duration: Duration::from_millis(100),
+      }
+    ));
   }
 }
