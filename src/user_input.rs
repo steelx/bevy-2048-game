@@ -2,6 +2,7 @@ use std::cmp::Ordering;
 use itertools::Itertools;
 use bevy::prelude::*;
 use crate::board::{Board, Game};
+use crate::game_states::GameState;
 use crate::tiles::{NewTileEvent, Tile, TilePosition};
 
 pub struct UserInputPlugin;
@@ -19,54 +20,60 @@ fn update_user_input(
   mut tiles: Query<(Entity, &mut TilePosition, &mut Tile)>,
   board_query: Query<&Board>,
   mut new_tile_event_writer: EventWriter<NewTileEvent>,
-  mut game: ResMut<Game>
+  mut game: ResMut<Game>,
+  mut next_state: ResMut<NextState<GameState>>,
 ) {
   let board = board_query.single();
   let user_input = keyboard_input.get_just_pressed().find_map(|value| {
     UserInput::try_from(value).ok()
   });
-  
-    if let Some(user_input) = user_input {
-      let mut it = tiles.iter_mut()
-        .sorted_by(|a, b| user_input.sorted_by_tile_position(&a.1, &b.1))
-        .peekable();
-      // dbg!(it.collect::<Vec<_>>());
-      
-      let mut column: u32 = 0;
-      // loop over all tiles from bottom-left to right (next column)
-      // then move to next row and go column-wise
-      // if tiles are in same row we merge them, while despawn the 2nd tile
-      while let Some(mut tile) = it.next() {
-        user_input.set_column_position(&mut tile.1, column, board.size);
-        if let Some(tile_next) = it.peek() {
-          // check y rows
-          if user_input.get_row_position(&tile_next.1) != user_input.get_row_position(&tile.1) {
-            column = 0; // dont merge
-          }
-          // check values
-          else if tile_next.2.points != tile.2.points {
-            column += 1;// different values, dont merge
-          }
-          // all case match, merge
-          else {
-            let real_next_tile = it.next().expect("Tile should have been there!");
-            tile.2.points += real_next_tile.2.points;
-            game.score += tile.2.points;
-            commands.entity(real_next_tile.0).despawn_recursive();
 
-            if let Some(next_next_tile) = it.peek() {
-              if user_input.get_row_position(&next_next_tile.1) != user_input.get_row_position(&tile.1) {
-                column = 0;
-              } else {
-                column += 1;
-              }
+  if keyboard_input.just_pressed(KeyCode::KeyQ) {
+    // Trigger game state change
+    info!("Changing game state to GameOver");
+    next_state.set(GameState::GameOver);
+  }
+  
+  if let Some(user_input) = user_input {
+    let mut it = tiles.iter_mut()
+      .sorted_by(|a, b| user_input.sorted_by_tile_position(&a.1, &b.1))
+      .peekable();
+    // dbg!(it.collect::<Vec<_>>());
+    
+    let mut column: u32 = 0;
+    // loop over all tiles from bottom-left to right (next column)
+    // then move to next row and go column-wise
+    // if tiles are in same row we merge them, while despawn the 2nd tile
+    while let Some(mut tile) = it.next() {
+      user_input.set_column_position(&mut tile.1, column, board.size);
+      if let Some(tile_next) = it.peek() {
+        // check y rows
+        if user_input.get_row_position(&tile_next.1) != user_input.get_row_position(&tile.1) {
+          column = 0; // dont merge
+        }
+        // check values
+        else if tile_next.2.points != tile.2.points {
+          column += 1;// different values, dont merge
+        }
+        // all case match, merge
+        else {
+          let real_next_tile = it.next().expect("Tile should have been there!");
+          tile.2.points += real_next_tile.2.points;
+          game.score += tile.2.points;
+          commands.entity(real_next_tile.0).despawn_recursive();
+
+          if let Some(next_next_tile) = it.peek() {
+            if user_input.get_row_position(&next_next_tile.1) != user_input.get_row_position(&tile.1) {
+              column = 0;
+            } else {
+              column += 1;
             }
           }
         }
       }
-      dbg!(game.score);
-      new_tile_event_writer.send(NewTileEvent);
     }
+    new_tile_event_writer.send(NewTileEvent);
+  }
 }
 
 #[derive(Debug)]

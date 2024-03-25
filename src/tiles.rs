@@ -5,6 +5,7 @@ use rand::seq::IteratorRandom;
 
 use crate::board::{Board, TILE_SIZE};
 use crate::colours;
+use crate::game_states::GameState;
 
 #[derive(Component)]
 pub struct TileText;
@@ -29,7 +30,7 @@ impl Plugin for TilesPlugin {
     app
       .add_event::<NewTileEvent>()
       .add_systems(PostStartup, spawn_tiles)
-      .add_systems(Update, (render_tile_points, render_tiles_position, new_tile_event_handler));
+      .add_systems(Update, (render_tile_points, render_tiles_position, new_tile_event_handler).run_if(in_state(GameState::Playing)));
   }
 }
 
